@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ramzi Neifar — Airline Cloud Migration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0b0f;
+    --bg2: #111318;
+    --bg3: #181b22;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8eaf0;
+    --muted: #7a7f8e;
+    --accent: #3d8ef7;
+    --accent2: #1dcfa4;
+    --accent3: #f2a93b;
+    --accent4: #b98ef7;
+    --red: #f75a5a;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── grid bg ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── header ── */
+  header {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 32px;
+    letter-spacing: .06em;
+    transition: color .2s;
+  }
+  .back-link:hover { color: var(--text); }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 3px;
+    letter-spacing: .04em;
+  }
+  .t-azure  { background: rgba(61,142,247,.15); color: #6cb0ff; border: 1px solid rgba(61,142,247,.3); }
+  .t-python { background: rgba(29,207,164,.12); color: #1dcfa4; border: 1px solid rgba(29,207,164,.25); }
+  .t-bash   { background: rgba(242,169,59,.12); color: #f2a93b; border: 1px solid rgba(242,169,59,.25); }
+  .t-sql    { background: rgba(185,142,247,.12); color: #c9aaff; border: 1px solid rgba(185,142,247,.25); }
+  .t-jenkins{ background: rgba(247,90,90,.12); color: #ff8585; border: 1px solid rgba(247,90,90,.25); }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -.02em;
+    margin-bottom: 16px;
+  }
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 540px;
+  }
+
+  /* ── metrics ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 32px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  @media (max-width: 600px) { .metrics { grid-template-columns: repeat(2,1fr); } }
+
+  .metric {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 14px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s, transform .2s;
+  }
+  .metric:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .metric::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .metric.m1::after { background: var(--accent2); }
+  .metric.m2::after { background: var(--accent); }
+  .metric.m3::after { background: var(--accent4); }
+  .metric.m4::after { background: var(--accent3); }
+
+  .metric-val {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .m1 .metric-val { color: var(--accent2); }
+  .m2 .metric-val { color: var(--accent); }
+  .m3 .metric-val { color: var(--accent4); }
+  .m4 .metric-val { color: var(--accent3); }
+
+  .metric-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── sections ── */
+  .section { padding: 36px 0; border-bottom: 1px solid var(--border); }
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* challenges */
+  .challenges { display: flex; flex-direction: column; gap: 10px; }
+  .challenge {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    transition: border-color .2s;
+  }
+  .challenge:hover { border-color: var(--border2); color: var(--text); }
+  .ch-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  /* work cards */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color .25s, transform .25s;
+    cursor: default;
+  }
+  .card:hover { border-color: var(--border2); transform: translateY(-3px); }
+
+  .card-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+  .card .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .p-green { color: var(--accent2); border-color: rgba(29,207,164,.3); background: rgba(29,207,164,.08); }
+  .p-blue  { color: #6cb0ff;       border-color: rgba(61,142,247,.3);  background: rgba(61,142,247,.08); }
+  .p-purple{ color: #c9aaff;       border-color: rgba(185,142,247,.3); background: rgba(185,142,247,.08); }
+
+  /* stack */
+  .stack { display: flex; flex-wrap: wrap; gap: 8px; }
+  .stack-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 6px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--muted);
+    transition: color .2s, border-color .2s;
+  }
+  .stack-item:hover { color: var(--text); border-color: var(--border2); }
+
+  /* ── footer ── */
+  footer {
+    padding-top: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* ── fade-in animation ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade { opacity: 0; animation: fadeUp .5s ease forwards; }
+  .d1 { animation-delay: .05s; }
+  .d2 { animation-delay: .15s; }
+  .d3 { animation-delay: .25s; }
+  .d4 { animation-delay: .35s; }
+  .d5 { animation-delay: .45s; }
+  .d6 { animation-delay: .55s; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="fade d1">
+    <a class="back-link" href="https://github.com/ramzi-neifar">← ramzi-neifar</a>
+    <div class="tags">
+      <span class="tag t-azure">Microsoft Azure</span>
+      <span class="tag t-python">Python</span>
+      <span class="tag t-bash">Bash</span>
+      <span class="tag t-sql">Oracle SQL</span>
+      <span class="tag t-jenkins">Jenkins</span>
+    </div>
+    <h1>Airline Ticketing<br><span>Cloud Migration</span></h1>
+    <p class="subtitle">Progressive on-premise → Azure migration for a multi-airline ticketing platform. Maintained backward compatibility, production stability, and test reliability across a phased rollout.</p>
+  </header>
+
+  <!-- metrics -->
+  <div class="metrics fade d2">
+    <div class="metric m1">
+      <div class="metric-val">+27pp</div>
+      <div class="metric-label">NR test pass rate<br>62% → 89%</div>
+    </div>
+    <div class="metric m2">
+      <div class="metric-val">~100×</div>
+      <div class="metric-label">SQL speedup<br>minutes → ms</div>
+    </div>
+    <div class="metric m3">
+      <div class="metric-val">50→1</div>
+      <div class="metric-label">Jenkinsfiles<br>centralized</div>
+    </div>
+    <div class="metric m4">
+      <div class="metric-val">44</div>
+      <div class="metric-label">Airlines covered<br>in SQL benchmark</div>
+    </div>
+  </div>
+
+  <!-- challenges -->
+  <div class="section fade d3">
+    <div class="section-label">Challenges</div>
+    <div class="challenges">
+      <div class="challenge"><div class="ch-dot"></div>Log access tightly coupled to on-premise infrastructure — NR tests partially failing after cloud migration</div>
+      <div class="challenge"><div class="ch-dot"></div>Critical production performance degradation after Azure migration (ms → several minutes)</div>
+      <div class="challenge"><div class="ch-dot"></div>High operational complexity — 50 identical Jenkinsfiles duplicated across separate repositories</div>
+      <div class="challenge"><div class="ch-dot"></div>Heterogeneous migration state: some airlines on Azure Object Storage, others still on persistent volumes</div>
+    </div>
+  </div>
+
+  <!-- work -->
+  <div class="section fade d4">
+    <div class="section-label">Work done</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-num">01</div>
+        <h3>Dynamic log access automation</h3>
+        <p>Designed Python & Bash scripts that auto-update log-access logic across all repositories, enabling NR test scripts to read from Azure without manual per-repo changes.</p>
+        <div class="pills">
+          <span class="pill p-green">62% → 89% pass rate</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-num">02</div>
+        <h3>SQL performance investigation</h3>
+        <p>Traced a production regression to Oracle selecting suboptimal indexes on complex queries. Designed and benchmarked two simplified alternatives across 44 airlines and a perf environment.</p>
+        <div class="pills">
+          <span class="pill p-blue">Minutes → milliseconds</span>
+          <span class="pill p-blue">Millions → thousands of rows</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-num">03</div>
+        <h3>Jenkins jobs centralization</h3>
+        <p>Replaced 50 duplicated Jenkinsfiles with a single centralized repository managing all jobs through one shared Jenkinsfile with parameterized per-job variables.</p>
+        <div class="pills">
+          <span class="pill p-purple">50 repos → 1 source of truth</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-num">04</div>
+        <h3>Adaptive NR test configuration</h3>
+        <p>Enhanced test scripts to read from Azure Object Storage with automatic fallback to persistent volumes. Added a Jenkins job exposing per-airline config variables for dynamic storage resolution.</p>
+        <div class="pills">
+          <span class="pill p-green">Smooth phased migration</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- stack -->
+  <div class="section fade d5">
+    <div class="section-label">Tech stack</div>
+    <div class="stack">
+      <span class="stack-item">Python</span>
+      <span class="stack-item">Bash</span>
+      <span class="stack-item">Microsoft Azure</span>
+      <span class="stack-item">Azure Object Storage</span>
+      <span class="stack-item">Oracle SQL</span>
+      <span class="stack-item">Jenkins</span>
+      <span class="stack-item">Groovy / Jenkinsfile</span>
+      <span class="stack-item">Non-regression testing</span>
+      <span class="stack-item">Performance benchmarking</span>
+    </div>
+  </div>
+
+  <footer class="fade d6">
+    <span>Ramzi Neifar — Portfolio</span>
+    <a href="https://github.com/Neifar" style="color:inherit;text-decoration:none;">github.com/ramzi-neifar</a>
+  </footer>
+
+</div>
+</body>
+</html>
